@@ -14,6 +14,7 @@ const userDaoSchema = new Schema({
   email: { type: String, index: { unique: true } },
   pass: { type: String },
   name: { type: String },
+  refreshTokenJti: { type: String },
   status: { type: Number },
 });
 

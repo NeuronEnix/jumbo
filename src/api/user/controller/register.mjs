@@ -6,6 +6,7 @@ import { hash as hashPass } from 'bcrypt';
 import { UserSchema, UserDao } from '../../../model/user.mjs';
 import { resErr, resOk, ResponseError } from '../../../common/respond.mjs';
 import { AUTH, STATUS } from '../../../common/const.mjs';
+import { getNewRefreshToken } from '../../../lib/auth.mjs';
 
 const ajv = new Ajv({ allErrors: true });
 addFormats(ajv)
@@ -48,7 +49,15 @@ export async function execute(req, res) {
         }
         throw e
       });
-    return resOk(res, user);
+    const tokenObj = await getNewRefreshToken(user.id);
+    user.refreshTokenJti = tokenObj.refreshTokenPayload.jti;
+    await user.save();
+
+    // Attach refresh token to cookie marked http only
+    const refreshTokenCookieProperty = { maxAge: AUTH.REFRESH_TOKEN_EXPIRE_COOKIE, httpOnly: true };
+    res.cookie('refreshToken', tokenObj.refreshToken, refreshTokenCookieProperty);
+
+    return resOk(res, { userId: tokenObj.userId });
 
   } catch (e) {
     if (e instanceof ResponseError) {
