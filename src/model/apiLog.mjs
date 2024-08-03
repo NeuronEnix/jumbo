@@ -5,7 +5,7 @@ export const apiLogDaoSchema = new Schema({
   ip: { type: String },
   method: { type: String },
   path: { type: String },
-  userId: { type: Number },
+  userId: { type: String },
   totalTime: { type: Number },
   resCode: { type: String },
   reqData: { type: Schema.Types.Mixed },
