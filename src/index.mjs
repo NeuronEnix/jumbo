@@ -9,9 +9,11 @@ import CONFIG from "./common/config.mjs"
 import appRouter from "./api/index.mjs"
 import { connectToDatabase} from "./dbConnection.mjs"
 import { inbound } from './common/logger.mjs';
+import { handleGameInit } from './cron/handleGameInit.mjs';
 
 const app = express();
 await connectToDatabase()
+handleGameInit()
 
 app.use(helmet())
 app.use(cors({
