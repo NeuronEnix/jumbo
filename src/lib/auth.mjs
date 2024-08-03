@@ -81,7 +81,7 @@ export async function getNewAccessToken(userId) {
  */
 export function verifyAccessToken(token) {
   try {
-    const accessTokenPayload = jwt.verify(token, AUTH.ACCESS_TOKEN_SECRET, {
+    const accessTokenPayload = jwt.verify(token.replace("Bearer ", ""), AUTH.ACCESS_TOKEN_SECRET, {
       algorithms: ["HS256"]
     });
     return accessTokenPayload;
