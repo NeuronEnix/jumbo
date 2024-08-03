@@ -1,14 +1,28 @@
 import jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
-import { resErr } from '../common/respond.mjs';
+import { resErr, ResponseError } from '../common/respond.mjs';
 import { AUTH } from '../common/const.mjs';
 
 
 /**
+ * @typedef {Object} T_AccessTokenPayload
+ * @property {string} id - userId of user.
+ * @property {string} jti - Json web token id.
+ * @property {number} iat - issued at time in seconds.
+ */
+
+
+/**
+ * @typedef {Object} T_RefreshTokenPayload
+ * @property {string} id - userId of user.
+ * @property {string} jti - Json web token id.
+ * @property {number} iat - issued at time in seconds.
+ */
+/**
  * Retrieves a new refresh token for the user with the given phone number and password.
  *
  * @param {string} userId - userId of user.
- * @return {Promise<{id: number, refreshToken: string, refreshTokenPayload: {id: number, jti: string, iat: number}}>} An object containing the user ID, the refresh token, and the refresh token payload.
+ * @return {Promise<{id: number, refreshToken: string, refreshTokenPayload: T_RefreshTokenPayload}>} An object containing the user ID, the refresh token, and the refresh token payload.
  */
 export async function getNewRefreshToken(userId) {
 
@@ -35,7 +49,7 @@ export async function getNewRefreshToken(userId) {
  * Retrieves a new access token for the user with the given userId.
  *
  * @param {string} userId - The userId of the user.
- * @return {Promise<{userId: string, accessToken: string, accessTokenPayload: {id: string, jti: string, iat: number}}>} An object containing the userId, the access token, and the access token payload.
+ * @return {Promise<{userId: string, accessToken: string, accessTokenPayload: T_AccessTokenPayload}>} An object containing the userId, the access token, and the access token payload.
  */
 export async function getNewAccessToken(userId) {
 
@@ -58,21 +72,39 @@ export async function getNewAccessToken(userId) {
   };
 }
 
-export async function verifyAccessToken(req, res, next) {
+
+/**
+ * Verifies the given access token and returns the access token payload.
+ *
+ * @param {string} token - The access token to verify.
+ * @return {T_AccessTokenPayload} The access token payload.
+ */
+export function verifyAccessToken(token) {
+  try {
+    const accessTokenPayload = jwt.verify(token, AUTH.ACCESS_TOKEN_SECRET, {
+      algorithms: ["HS256"]
+    });
+    return accessTokenPayload;
+  } catch (e) {
+    if (e instanceof jwt.TokenExpiredError) {
+      throw resErr.auth.expiredAccessToken(e)
+    }
+    throw resErr.auth.invalidAccessToken(e)
+  }
+}
+
+export async function verifyAccessTokenExpress(req, res, next) {
   const { authorization } = req.headers;
   try {
     if (typeof authorization !== 'string') {
       return resErr.auth.invalidAccessToken().send(res);
     }
-    const accessTokenPayload = jwt.verify(authorization.replace("Bearer ", ""), AUTH.ACCESS_TOKEN_SECRET, {
-      algorithms: ["HS256"]
-    });
-    req.user = accessTokenPayload;
+    req.user = verifyAccessToken(authorization);
     next();
   } catch (e) {
-    if (e instanceof jwt.TokenExpiredError) {
-      return resErr.auth.expiredAccessToken().send(res);
+    if (e instanceof ResponseError) {
+      e.send(res);
     }
-    return resErr.auth.invalidAccessToken(e).send(res);
+    throw resErr.gen.unknown(e);
   }
 }
