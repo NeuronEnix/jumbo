@@ -9,7 +9,7 @@ import { connectToDatabase} from "./dbConnection.mjs"
 import { inbound } from './common/logger.mjs';
 
 const app = express();
-connectToDatabase()
+await connectToDatabase()
 
 app.use(helmet())
 app.use(cors({
