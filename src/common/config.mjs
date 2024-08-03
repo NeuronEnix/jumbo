@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
-process.env.DISABLE_DOTENV == "true" || dotenv.config();
+process.env.DISABLE_DOTENV === "true" || dotenv.config();
 const CONFIG = {
-  NODE_ENV : process.env.NODE_ENV ?? 'development',
+  NODE_ENV : process.env.NODE_ENV ?? 'dev',
   SERVER: {
     PORT: parseInt(process.env.PORT ?? '3000', 10),
   },

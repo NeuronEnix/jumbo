@@ -4,6 +4,17 @@ export const STATUS = {
   NOT_REGISTERED: 3
 };
 
+export const CommonSchema = {
+
+  // Db fields
+  _id: { type: 'string', minimum: 24, maximum: 24 },
+  status: { type: 'integer', minimum: 1 },
+
+  // Pagination fields
+  limit: { type: 'number', minimum: 1, maximum: 50 },
+  pageNumber: { type: 'number', minimum: 1, maximum: 1000 },
+
+};
 
 export const AUTH = {
   BCRYPT_SALT_ROUNDS: 10,
