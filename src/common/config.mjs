@@ -3,7 +3,8 @@ process.env.DISABLE_DOTENV === "true" || dotenv.config();
 const CONFIG = {
   NODE_ENV : process.env.NODE_ENV ?? 'dev',
   SERVER: {
-    PORT: parseInt(process.env.PORT ?? '3000', 10),
+    API_PORT: parseInt(process.env.API_PORT ?? '3000', 10),
+    WS_PORT: parseInt(process.env.WS_PORT ?? '3001', 10),
   },
   DB: {
     HOST: process.env.DB_HOST ?? 'localhost',

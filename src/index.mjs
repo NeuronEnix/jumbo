@@ -2,6 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import helmet from 'helmet';
+
+import {} from "./webSocket.mjs"
 import { resOk, resErr } from "./common/respond.mjs"
 import CONFIG from "./common/config.mjs"
 import appRouter from "./api/index.mjs"
@@ -36,6 +38,6 @@ app.use((err, req, res, next) => {
   }
 });
 
-app.listen(CONFIG.SERVER.PORT, () => {
-  console.log(`Server at: http://localhost:${CONFIG.SERVER.PORT}`);
+app.listen(CONFIG.SERVER.API_PORT, () => {
+  console.log(`Server at: http://localhost:${CONFIG.SERVER.API_PORT}`);
 });
