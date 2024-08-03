@@ -49,8 +49,8 @@ export async function execute(req, res) {
 
     // Create new refresh token
     const tokenObj = await getNewRefreshToken(user.id);
-    user.refTokJti = tokenObj.refreshTokenPayload.jti;
-    await user.save({ fields: ['refTokJti'] });
+    user.refreshTokenJti = tokenObj.refreshTokenPayload.jti;
+    await user.save();
 
     // Attach refresh token to cookie marked http only
     const refreshTokenCookieProperty = { maxAge: AUTH.REFRESH_TOKEN_EXPIRE_COOKIE, httpOnly: true };
