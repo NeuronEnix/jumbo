@@ -25,3 +25,24 @@ export const AUTH = {
   REFRESH_TOKEN_EXPIRE: '30d',
   REFRESH_TOKEN_EXPIRE_COOKIE : 30 * 24 * 60 * 60 * 100,
 };
+
+export const GAME_EVENT = {
+  GAME_INIT: {
+    name: "game:init"
+  },
+  QUESTION_SEND: {
+    name: "question:send"
+  },
+  ANSWER_SUBMIT: {
+    name: "answer:submit"
+  },
+  GAME_END: {
+    name: "game:end"
+  }
+}
+
+export const GAME_CONFIG = {
+  MAX_USER_COUNT: 2,
+  MAX_TIME_SEC: 2*60, // 2 minutes
+  MAX_QUESTION: 6
+}

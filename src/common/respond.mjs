@@ -83,4 +83,14 @@ export const resErr = {
       msg: 'Account already exists',
     }),
   },
+  game: {
+    alreadyInQueue: () => new ResponseError({
+      code: 'USER_ALREADY_IN_QUEUE',
+      msg: 'User already in queue',
+    }),
+    userNotConnected: () => new ResponseError({
+      code: 'USER_NOT_CONNECTED',
+      msg: 'User not connected to websocket, please connect',
+    }),
+  }
 };
