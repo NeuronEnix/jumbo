@@ -15,6 +15,9 @@ wss.on('connection', (ws, req) => {
   try {
     const tokenPayload = verifyAccessToken(req.headers.authorization)
     userWs[tokenPayload.id] = ws
+    ws.on('message', (data) => {
+      console.log(data)
+    })
   } catch (e) {
     if ( e instanceof ResponseError ) {
       console.log(e.msg)
@@ -22,3 +25,5 @@ wss.on('connection', (ws, req) => {
     ws.close()
   }
 });
+
+export const isUserConnected = (userId) => userWs[userId]
