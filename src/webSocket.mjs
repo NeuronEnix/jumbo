@@ -18,23 +18,23 @@ wss.on('connection', (ws, req) => {
     const tokenPayload = verifyAccessToken(req.headers.authorization)
     userWs[tokenPayload.id] = ws
     ws.userId = tokenPayload.id
-    ws.on('message', async (data) => {
+    ws.on('message', async (payload) => {
       try {
+        payload = JSON.parse(payload.toString())
+        if (!payload?.event) return sendEvent(ws, { event: 'ERROR', data: { msg: 'Accepts only JSON' } })
+          console.log(`WS: ${payload.event}`)
 
-        data = JSON.parse(data.toString())
-        if (!data?.event) return sendEvent(ws, { event: 'ERROR', data: { msg: 'Accepts only JSON' } })
-        console.log(`WS: ${data.event}`)
-
-        switch (data?.event) {
-          case GAME_EVENT.ANSWER_SUBMIT.name: await handleAnswerSubmitEvent(data); break;
-          case GAME_EVENT.GAME_SUBMIT.name: await handleGameSubmitEvent(data); break;
+        payload.userId = ws.userId
+        switch (payload.event) {
+          case GAME_EVENT.ANSWER_SUBMIT.name: await handleAnswerSubmitEvent(payload); break;
+          case GAME_EVENT.GAME_SUBMIT.name: await handleGameSubmitEvent(payload); break;
         }
 
       } catch (e) {
         if (e instanceof ResponseError)
           return sendEvent(ws, { event: 'ERROR', code: e.code, msg: e.msg, data: e.data })
         console.log(e)
-        if (!data?.event) ws.send(JSON.stringify({ event: 'ERROR', data: { msg: 'Accepts only JSON' } }))
+        if (!payload?.event) ws.send(JSON.stringify({ event: 'ERROR', data: { msg: 'Accepts only JSON' } }))
       }
     })
   } catch (e) {
