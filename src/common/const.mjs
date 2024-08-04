@@ -39,8 +39,8 @@ export const GAME_EVENT = {
   GAME_SUBMIT: {
     name: "game:submit"
   },
-  USER_DONE: {
-    name: "user:done"
+  USER_SUBMITTED: {
+    name: "user:submitted"
   },
   GAME_END: {
     name: "game:end"
