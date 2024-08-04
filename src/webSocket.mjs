@@ -40,7 +40,7 @@ wss.on('connection', (ws, req) => {
   } catch (e) {
     if (e instanceof ResponseError) {
       sendEvent(ws, { event: 'ERROR', code: e.code, msg: e.msg, data: e.data })
-      if (['INVALID_TOKEN', 'EXPIRED_TOKEN'].includes(e.code)) {
+      if (['INVALID_TOKEN', 'EXPIRED_ACCESS_TOKEN'].includes(e.code)) {
         disconnect(ws)
       }
     } else {
