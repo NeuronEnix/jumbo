@@ -4,13 +4,13 @@ const Schema = mongoose.Schema;
 
 export const QuestionSchema = {
   ...CommonSchema,
-  correctOptionId: { type: 'integer', minimum: 1, maximum: Number.MAX_SAFE_INTEGER },
+  optionId: { type: 'integer', minimum: 1, maximum: Number.MAX_SAFE_INTEGER },
 }
 
 const questionDaoSchema = new Schema({
   questionText: { type: String },
   questionHash: { type: String, index: { unique: true } },
-  options: [{ text: { type: String } }],
+  options: [{ text: { type: String }, id: { type: Number }, _id: false }],
   correctOptionId: { type: Number },
   status: { type: Number, default: 1 },
 });
