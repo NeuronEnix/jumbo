@@ -120,6 +120,14 @@ export async function handleAnswerSubmitEvent(payload) {
   if (!gameSession.users.find((u) => u._id == userId)) throw resErr.game.userNotInGame();
   if (!gameSession.questionIds.includes(data.questionId)) throw resErr.game.invalidQuestion();
 
+  const question = await QuestionDao.findById(
+    gameSession.questionIds[answerList.length],
+    { questionText: 1, options: 1 }
+  );
+
+  const isOptionValid = question.options.find((o) => o.id == data.chosenOptionId);
+  if (!isOptionValid) throw resErr.game.invalidOption();
+
   // Save answer
   const answerList = gameSession.users.find((u) => u._id == userId).answers;
   const alreadyAnswered = answerList.find((o) => o.questionId == data.questionId);
@@ -129,10 +137,6 @@ export async function handleAnswerSubmitEvent(payload) {
 
   // if this is a new answer, send next question if needed
   if (!alreadyAnswered && answerList.length < gameSession.questionIds.length) {
-    const question = await QuestionDao.findById(
-      gameSession.questionIds[answerList.length],
-      { questionText: 1, options: 1 }
-    );
     sendQuestionSendEvent(userId, data.gameSessionId, {
       _id: question._id,
       text: question.questionText,
