@@ -12,9 +12,7 @@ export class ResponseError extends Error {
   }
   send(resObj) {
     const httpCode = this.code == "UNKNOWN_ERROR" ? 500 : 400
-    if (this.code == "INVALID_PARAM") {
-      this.msg = `${this.info[0].instancePath.replace("/", "")}: ${this.info[0].message}`
-    }
+
     if (this.info) console.log(this.info)
     resObj.status(httpCode).send({
       code: this.code,
@@ -43,7 +41,7 @@ export const resErr = {
 
     invalidParam: (msg, info = {}) => new ResponseError({
       code: 'INVALID_PARAM',
-      msg,
+      msg: msg || `${info[0].instancePath.replace("/", "")}: ${info[0].message}`,
       info,
     }),
     invalidRequestData: (msg, info = {}) => new ResponseError({
