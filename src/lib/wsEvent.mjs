@@ -79,6 +79,8 @@ export async function sendGameEndEvent(gameSession) {
   const isDraw = gameSession.users[0].score === gameSession.users[1].score
   const winnerId = isDraw ? null : gameSession.users[0]._id
   const users = await UserDao.find({ _id: { $in: gameSession.users.map(u => u._id) } })
+  users.forEach( u => u.gameSessionId = null)
+  await Promise.all(users.map(u => u.save()))
 
   gameSession.users.forEach(u => {
     sendEventToUser(u._id, {
