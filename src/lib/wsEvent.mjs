@@ -33,6 +33,7 @@ export function sendGameInit(data) {
 export function sendQuestionSendEvent(userId, gameSessionId, question) {
   sendEventToUser(userId, {
     event: GAME_EVENT.QUESTION_SEND.name,
+    userId,
     data: {
       gameSessionId,
       question: {
@@ -49,11 +50,12 @@ export function sendQuestionSendEvent(userId, gameSessionId, question) {
  * @param {String[]} userId
  * @param {String} gameSessionId - Game session ID
  */
-export function sendUserDoneEvent( userId, allUserIds, gameSessionId) {
-  allUserIds.forEach((u) => {
-    sendEventToUser(u, {
+export function sendUserDoneEvent(userId, allUserIds, gameSessionId) {
+  allUserIds.forEach((uid) => {
+    sendEventToUser(uid, {
       event: GAME_EVENT.USER_DONE.name,
-      data: { userId: userId, gameSessionId, }
+      userId: uid,
+      data: { gameSubmittedByUserId: userId, gameSessionId, }
     })
   })
 }
