@@ -106,5 +106,13 @@ export const resErr = {
       code: 'INVALID_OPTION',
       msg: 'Invalid option',
     }),
+    alreadySubmitted: () => new ResponseError({
+      code: 'ALREADY_SUBMITTED',
+      msg: 'Already submitted',
+    }),
+    notAllQuestionAnswered: () => new ResponseError({
+      code: 'NOT_ALL_QUESTION_ANSWERED',
+      msg: 'Not all questions answered',
+    })
   }
 };
