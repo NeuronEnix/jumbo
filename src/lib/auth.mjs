@@ -103,7 +103,7 @@ export async function verifyAccessTokenExpress(req, res, next) {
     next();
   } catch (e) {
     if (e instanceof ResponseError) {
-      e.send(res);
+      return e.send(res);
     }
     throw resErr.gen.unknown(e);
   }
