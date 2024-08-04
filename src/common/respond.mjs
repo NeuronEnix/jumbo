@@ -86,6 +86,10 @@ export const resErr = {
       code: 'USER_ALREADY_IN_QUEUE',
       msg: 'User already in queue',
     }),
+    alreadyInSession: () => new ResponseError({
+      code: 'USER_ALREADY_IN_SESSION',
+      msg: 'User already in a session',
+    }),
     userNotConnected: () => new ResponseError({
       code: 'USER_NOT_CONNECTED',
       msg: 'User not connected to websocket, please connect',
@@ -117,6 +121,7 @@ export const resErr = {
     gameCompleted: () => new ResponseError({
       code: 'GAME_COMPLETED',
       msg: 'Game completed',
-    })
+    }),
+
   }
 };

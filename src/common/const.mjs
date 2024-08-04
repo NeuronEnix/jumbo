@@ -53,6 +53,6 @@ export const GAME_EVENT = {
 
 export const GAME_CONFIG = {
   MAX_USER_COUNT: 2,
-  MAX_TIME_SEC: 2*60, // 2 minutes
+  MAX_GAME_TIME_MS: 2*60*1000, // 2 minutes
   MAX_QUESTION: 2
 }
