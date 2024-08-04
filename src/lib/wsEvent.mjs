@@ -61,6 +61,32 @@ export function sendUserDoneEvent(userId, allUserIds, gameSessionId) {
   })
 }
 
+/**
+ * Send game end event
+ * @param {GameSessionDao} gameSession - Game session ID
+ */
+export async function sendGameEndEvent(gameSession) {
+  gameSession.users.sort((a, b) => b.score - a.score)
+  const isDraw = gameSession.users[0].score === gameSession.users[1].score
+  const winnerId = isDraw ? null : gameSession.users[0]._id
+  const users = await UserDao.find({ _id: { $in: gameSession.users.map(u => u._id) } })
+
+  gameSession.users.forEach(u => {
+    sendEventToUser(u._id, {
+      event: GAME_EVENT.GAME_END.name,
+      userId: u._id,
+      data: {
+        isDraw, winnerId, gameSessionId: gameSession._id,
+        users: gameSession.users.map( u => ({
+          userId: u._id,
+          name: users.find(user => user._id.equals(u._id)).name,
+          score: u.score
+        }))
+      }
+    })
+  })
+}
+
 const answerSubmitValidator = ajv.compile({
   type: 'object',
   properties: {
