@@ -22,6 +22,7 @@ const gameSessionDaoSchema = new Schema({
     gameSubmitted: { type: Boolean, default: false },
     score: { type: Number, default: 0 }
   }],
+  timeoutAt: { type: Date },
   status: { type: Number, default: STATUS.ACTIVE },
 });
 

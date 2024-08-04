@@ -87,7 +87,7 @@ export async function handleGameTimeout() {
     prevVal.gameSessionCount = gameSessions.length
   }
   gameSessions.forEach(async gs => {
-    if (gs.timeoutAt > Date.now()) {
+    if (gs.timeoutAt < Date.now()) {
       const questionList = await QuestionDao.find({ _id: { $in: gs.questionIds } });
       gs.users.forEach(gameUser => {
         gameUser.gameSubmitted = true;

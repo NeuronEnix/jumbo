@@ -9,11 +9,12 @@ import CONFIG from "./common/config.mjs"
 import appRouter from "./api/index.mjs"
 import { connectToDatabase} from "./dbConnection.mjs"
 import { inbound } from './common/logger.mjs';
-import { handleGameInit } from './cron/handleGameInit.mjs';
+import { handleGameInit, handleGameTimeout } from './cron/handleGameInit.mjs';
 
 const app = express();
 await connectToDatabase()
 handleGameInit()
+handleGameTimeout()
 
 app.use(helmet())
 app.use(cors({
@@ -23,6 +24,8 @@ app.use(cors({
   optionsSuccessStatus: 204,
   allowedHeaders: '*', // ["Content-Type", "Authorization"]
 }));
+
+// app.use(express.static('src/public'))
 
 app.use(bodyParser.json({limit: '1mb'}));
 app.use(inbound) // To log request
