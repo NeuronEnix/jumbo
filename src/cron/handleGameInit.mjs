@@ -43,7 +43,7 @@ export async function handleGameInit() {
   }
   while (userList.length >= GAME_CONFIG.MAX_USER_COUNT) {
     const gameUsers = userList.splice(0, GAME_CONFIG.MAX_USER_COUNT);
-    gameUsers.forEach((u) => userIdSet.delete(u));
+    gameUsers.forEach((u) => userIdSet.delete(u.userId));
     const gameSession = await createGameSession(gameUsers);
     sendGameInit({
       users: gameUsers
