@@ -47,7 +47,11 @@ export async function handleGameInit() {
       users: gameUsers
     })
     gameUsers.forEach((u) => {
-      sendQuestionSendEvent( u.userId, gameSession.gameSessionId, gameSession.questionList[0] )
+      sendQuestionSendEvent( u.userId, gameSession.gameSessionId, {
+        _id: gameSession.questionList[0]._id,
+        text: gameSession.questionList[0].questionText,
+        options: gameSession.questionList[0].options
+      } )
     });
   }
   setTimeout(handleGameInit, 1000);
