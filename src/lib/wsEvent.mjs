@@ -17,3 +17,18 @@ export function sendGameInit(data) {
     }))
   })
 }
+
+/**
+ * Send Question send event to all users
+ * @param {Number} userId - userId of the user who received the event
+ * @param {{_id: string, text: string, options: {id: number, text: string}[]}[]} questions - list of questions
+ */
+export function sendQuestionSendEvent(userId, questions) {
+  userWs[userId] && userWs[userId].send(JSON.stringify({
+    event: GAME_EVENT.QUESTION_SEND.name,
+    data: {
+      userId,
+      questions
+    }
+  }))
+}
