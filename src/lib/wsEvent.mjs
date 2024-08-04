@@ -5,6 +5,7 @@ import { sendEventToUser, userWs } from "../webSocket.mjs";
 import { QuestionDao, QuestionSchema } from '../model/question.mjs';
 import { GameSessionDao } from '../model/gameSession.mjs';
 import { resErr } from '../common/respond.mjs';
+import { UserDao } from '../model/user.mjs';
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -53,9 +54,9 @@ export function sendQuestionSendEvent(userId, gameSessionId, question) {
 export function sendUserDoneEvent(userId, allUserIds, gameSessionId) {
   allUserIds.forEach((uid) => {
     sendEventToUser(uid, {
-      event: GAME_EVENT.USER_DONE.name,
+      event: GAME_EVENT.USER_SUBMITTED.name,
       userId: uid,
-      data: { gameSubmittedByUserId: userId, gameSessionId, }
+      data: { submittedByUserId: userId, gameSessionId, }
     })
   })
 }
@@ -63,25 +64,25 @@ export function sendUserDoneEvent(userId, allUserIds, gameSessionId) {
 const answerSubmitValidator = ajv.compile({
   type: 'object',
   properties: {
-    event: { type: 'string', enum: [GAME_EVENT.ANSWER_SUBMIT.name] },
-    userId: CommonSchema._id,
     gameSessionId: CommonSchema._id,
     questionId: CommonSchema._id,
     chosenOptionId: QuestionSchema.optionId
   },
-  required: ['event', 'userId', 'gameSessionId', 'questionId', 'chosenOptionId'],
+  required: ['gameSessionId', 'questionId', 'chosenOptionId'],
   additionalProperties: false,
 });
 /**
  * Handle answer submit event
- * @param {Object} data
- * @param {string} data.event
- * @param {string} data.userId
- * @param {string} data.gameSessionId
- * @param {string} data.questionId
- * @param {number} data.chosenOptionId
+ * @param {Object} payload
+ * @param {string} payload.event
+ * @param {string} payload.userId
+ * @param {Object} payload.data
+ * @param {string} payload.data.gameSessionId
+ * @param {string} payload.data.questionId
+ * @param {number} payload.data.chosenOptionId
  */
-export async function handleAnswerSubmitEvent(data) {
+export async function handleAnswerSubmitEvent(payload) {
+  const { userId, data } = payload
   const dataValidated = answerSubmitValidator(data);
   if (!dataValidated) {
     throw resErr.gen.invalidParam('', answerSubmitValidator.errors)
@@ -90,11 +91,11 @@ export async function handleAnswerSubmitEvent(data) {
 
   // Handle validation
   if (!gameSession) throw resErr.game.notFound();
-  if (!gameSession.users.find((u) => u._id == data.userId)) throw resErr.game.userNotInGame();
+  if (!gameSession.users.find((u) => u._id == userId)) throw resErr.game.userNotInGame();
   if (!gameSession.questionIds.includes(data.questionId)) throw resErr.game.invalidQuestion();
 
   // Save answer
-  const answerList = gameSession.users.find((u) => u._id == data.userId).answers;
+  const answerList = gameSession.users.find((u) => u._id == userId).answers;
   const alreadyAnswered = answerList.find((o) => o.questionId == data.questionId);
   if (alreadyAnswered) alreadyAnswered.chosenOptionId = data.chosenOptionId;
   else answerList.push({ questionId: data.questionId, chosenOptionId: data.chosenOptionId });
@@ -106,7 +107,7 @@ export async function handleAnswerSubmitEvent(data) {
       gameSession.questionIds[answerList.length],
       { questionText: 1, options: 1 }
     );
-    sendQuestionSendEvent(data.userId, data.gameSessionId, {
+    sendQuestionSendEvent(userId, data.gameSessionId, {
       _id: question._id,
       text: question.questionText,
       options: question.options
@@ -117,35 +118,49 @@ export async function handleAnswerSubmitEvent(data) {
 const gameSubmitValidator = ajv.compile({
   type: 'object',
   properties: {
-    event: { type: 'string', enum: [GAME_EVENT.GAME_SUBMIT.name] },
-    userId: CommonSchema._id,
     gameSessionId: CommonSchema._id,
   },
-  required: ['event', 'userId', 'gameSessionId'],
+  required: ['gameSessionId'],
   additionalProperties: false,
 });
 
 /**
  * Handle game submit event
- * @param {Object} data
- * @param {string} data.event
- * @param {string} data.userId
- * @param {string} data.gameSessionId
+ * @param {Object} payload
+ * @param {string} payload.event
+ * @param {string} payload.userId
+ * @param {Object} payload.data
+ * @param {string} payload.data.gameSessionId
  */
-export async function handleGameSubmitEvent(data) {
+export async function handleGameSubmitEvent(payload) {
+  const { userId, data } = payload
   const dataValidated = gameSubmitValidator(data);
   if (!dataValidated) {
+    console.log(answerSubmitValidator.errors)
     throw resErr.gen.invalidParam('', answerSubmitValidator.errors)
   }
   const gameSession = await GameSessionDao.findById(data.gameSessionId);
 
   // Handle validation
   if (!gameSession) throw resErr.game.notFound();
-  const gameUser = gameSession.users.find((u) => u._id == data.userId)
+  const gameUser = gameSession.users.find((u) => u._id == userId)
   if (!gameUser) throw resErr.game.userNotInGame();
+  if (gameSession.questionIds.length != gameUser.answers.length) throw resErr.game.notAllQuestionAnswered();
+  // if (gameUser.gameSubmitted) throw resErr.game.alreadySubmitted();
 
-  // Save answer
+  // Calculate score
+  const questionList = await QuestionDao.find({ _id: { $in: gameSession.questionIds } });
   gameUser.gameSubmitted = true;
+  gameUser.score = gameUser.answers.reduce((prev, cur) => {
+    const question = questionList.find((q) => q._id.equals(cur.questionId));
+    if (question.correctOptionId == cur.chosenOptionId) prev += 1
+    return prev
+  }, 0)
+
   await gameSession.save();
-  sendUserDoneEvent(data.userId, gameSession.users.map((u) => u._id), data.gameSessionId)
+
+  sendUserDoneEvent(userId, gameSession.users.map((u) => u._id), data.gameSessionId)
+  const submittedUserCount = gameSession.users.filter((u) => u.gameSubmitted).length
+  if (submittedUserCount != gameSession.users.length) return
+  sendGameEndEvent(gameSession)
 }
