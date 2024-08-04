@@ -7,7 +7,7 @@ export const STATUS = {
 export const CommonSchema = {
 
   // Db fields
-  _id: { type: 'string', minimum: 24, maximum: 24 },
+  _id: { type: 'string', minLength: 24, maxLength: 24 },
   status: { type: 'integer', minimum: 1 },
 
   // Pagination fields
@@ -44,5 +44,5 @@ export const GAME_EVENT = {
 export const GAME_CONFIG = {
   MAX_USER_COUNT: 2,
   MAX_TIME_SEC: 2*60, // 2 minutes
-  MAX_QUESTION: 6
+  MAX_QUESTION: 2
 }
