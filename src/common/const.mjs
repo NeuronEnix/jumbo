@@ -36,6 +36,12 @@ export const GAME_EVENT = {
   ANSWER_SUBMIT: {
     name: "answer:submit"
   },
+  GAME_SUBMIT: {
+    name: "game:submit"
+  },
+  USER_DONE: {
+    name: "user:done"
+  },
   GAME_END: {
     name: "game:end"
   }

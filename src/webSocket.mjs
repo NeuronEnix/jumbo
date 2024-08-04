@@ -3,7 +3,7 @@ import CONFIG from './common/config.mjs';
 import { verifyAccessToken } from './lib/auth.mjs';
 import { ResponseError } from './common/respond.mjs';
 import { GAME_EVENT } from './common/const.mjs';
-import { handleAnswerSubmitEvent } from './lib/wsEvent.mjs';
+import { handleAnswerSubmitEvent, handleGameSubmitEvent } from './lib/wsEvent.mjs';
 
 export const userWs = {}
 
@@ -27,6 +27,7 @@ wss.on('connection', (ws, req) => {
 
         switch (data?.event) {
           case GAME_EVENT.ANSWER_SUBMIT.name: await handleAnswerSubmitEvent(data); break;
+          case GAME_EVENT.GAME_SUBMIT.name: await handleGameSubmitEvent(data); break;
         }
 
       } catch (e) {

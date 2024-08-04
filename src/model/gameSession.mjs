@@ -19,6 +19,7 @@ const gameSessionDaoSchema = new Schema({
       }],
       default: []
     },
+    gameSubmitted: { type: Boolean, default: false },
     score: { type: Number, default: 0 }
   }],
   status: { type: Number, default: STATUS.ACTIVE },

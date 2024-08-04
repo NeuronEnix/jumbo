@@ -26,7 +26,7 @@ export function sendGameInit(data) {
 
 /**
  * Send Question event
- * @param {Number} userId - userId of the user who received the event
+ * @param {String} userId - userId of the user who received the event
  * @param {String} gameSessionId - Game session ID
  * @param {{_id: string, text: string, options: {id: number, text: string}[]}} question - question
  */
@@ -34,7 +34,6 @@ export function sendQuestionSendEvent(userId, gameSessionId, question) {
   sendEventToUser(userId, {
     event: GAME_EVENT.QUESTION_SEND.name,
     data: {
-      userId,
       gameSessionId,
       question: {
         questionId: question._id,
@@ -45,6 +44,19 @@ export function sendQuestionSendEvent(userId, gameSessionId, question) {
   })
 }
 
+/**
+ * Send user done event
+ * @param {String[]} userId
+ * @param {String} gameSessionId - Game session ID
+ */
+export function sendUserDoneEvent( userId, allUserIds, gameSessionId) {
+  allUserIds.forEach((u) => {
+    sendEventToUser(u, {
+      event: GAME_EVENT.USER_DONE.name,
+      data: { userId: userId, gameSessionId, }
+    })
+  })
+}
 
 const answerSubmitValidator = ajv.compile({
   type: 'object',
@@ -59,7 +71,7 @@ const answerSubmitValidator = ajv.compile({
   additionalProperties: false,
 });
 /**
- * Send answer submit event to all users
+ * Handle answer submit event
  * @param {Object} data
  * @param {string} data.event
  * @param {string} data.userId
@@ -87,7 +99,7 @@ export async function handleAnswerSubmitEvent(data) {
   await gameSession.save();
 
   // if this is a new answer, send next question if needed
-  if ( !alreadyAnswered && answerList.length < gameSession.questionIds.length) {
+  if (!alreadyAnswered && answerList.length < gameSession.questionIds.length) {
     const question = await QuestionDao.findById(
       gameSession.questionIds[answerList.length],
       { questionText: 1, options: 1 }
@@ -98,4 +110,40 @@ export async function handleAnswerSubmitEvent(data) {
       options: question.options
     });
   }
+}
+
+const gameSubmitValidator = ajv.compile({
+  type: 'object',
+  properties: {
+    event: { type: 'string', enum: [GAME_EVENT.GAME_SUBMIT.name] },
+    userId: CommonSchema._id,
+    gameSessionId: CommonSchema._id,
+  },
+  required: ['event', 'userId', 'gameSessionId'],
+  additionalProperties: false,
+});
+
+/**
+ * Handle game submit event
+ * @param {Object} data
+ * @param {string} data.event
+ * @param {string} data.userId
+ * @param {string} data.gameSessionId
+ */
+export async function handleGameSubmitEvent(data) {
+  const dataValidated = gameSubmitValidator(data);
+  if (!dataValidated) {
+    throw resErr.gen.invalidParam('', answerSubmitValidator.errors)
+  }
+  const gameSession = await GameSessionDao.findById(data.gameSessionId);
+
+  // Handle validation
+  if (!gameSession) throw resErr.game.notFound();
+  const gameUser = gameSession.users.find((u) => u._id == data.userId)
+  if (!gameUser) throw resErr.game.userNotInGame();
+
+  // Save answer
+  gameUser.gameSubmitted = true;
+  await gameSession.save();
+  sendUserDoneEvent(data.userId, gameSession.users.map((u) => u._id), data.gameSessionId)
 }
