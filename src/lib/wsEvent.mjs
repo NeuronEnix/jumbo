@@ -1,6 +1,12 @@
-import { GAME_EVENT } from "../common/const.mjs";
-import { userWs } from "../webSocket.mjs";
+import Ajv from 'ajv';
 
+import { CommonSchema, GAME_EVENT } from "../common/const.mjs";
+import { sendEventToUser, userWs } from "../webSocket.mjs";
+import { QuestionDao, QuestionSchema } from '../model/question.mjs';
+import { GameSessionDao } from '../model/gameSession.mjs';
+import { resErr } from '../common/respond.mjs';
+
+const ajv = new Ajv({ allErrors: true });
 
 /**
  * Send game init event to all users
@@ -19,16 +25,77 @@ export function sendGameInit(data) {
 }
 
 /**
- * Send Question send event to all users
+ * Send Question event
  * @param {Number} userId - userId of the user who received the event
- * @param {{_id: string, text: string, options: {id: number, text: string}[]}[]} questions - list of questions
+ * @param {String} gameSessionId - Game session ID
+ * @param {{_id: string, text: string, options: {id: number, text: string}[]}} question - question
  */
-export function sendQuestionSendEvent(userId, questions) {
-  userWs[userId] && userWs[userId].send(JSON.stringify({
+export function sendQuestionSendEvent(userId, gameSessionId, question) {
+  sendEventToUser(userId, {
     event: GAME_EVENT.QUESTION_SEND.name,
     data: {
       userId,
-      questions
+      gameSessionId,
+      question: {
+        questionId: question._id,
+        text: question.text,
+        options: question.options
+      }
     }
-  }))
+  })
+}
+
+
+const answerSubmitValidator = ajv.compile({
+  type: 'object',
+  properties: {
+    event: { type: 'string', enum: [GAME_EVENT.ANSWER_SUBMIT.name] },
+    userId: CommonSchema._id,
+    gameSessionId: CommonSchema._id,
+    questionId: CommonSchema._id,
+    chosenOptionId: QuestionSchema.optionId
+  },
+  required: ['event', 'userId', 'gameSessionId', 'questionId', 'chosenOptionId'],
+  additionalProperties: false,
+});
+/**
+ * Send answer submit event to all users
+ * @param {Object} data
+ * @param {string} data.event
+ * @param {string} data.userId
+ * @param {string} data.gameSessionId
+ * @param {string} data.questionId
+ * @param {number} data.chosenOptionId
+ */
+export async function handleAnswerSubmitEvent(data) {
+  const dataValidated = answerSubmitValidator(data);
+  if (!dataValidated) {
+    throw resErr.gen.invalidParam('', answerSubmitValidator.errors)
+  }
+  const gameSession = await GameSessionDao.findById(data.gameSessionId);
+
+  // Handle validation
+  if (!gameSession) throw resErr.game.notFound();
+  if (!gameSession.users.find((u) => u._id == data.userId)) throw resErr.game.userNotInGame();
+  if (!gameSession.questionIds.includes(data.questionId)) throw resErr.game.invalidQuestion();
+
+  // Save answer
+  const answerList = gameSession.users.find((u) => u._id == data.userId).answers;
+  const alreadyAnswered = answerList.find((o) => o.questionId == data.questionId);
+  if (alreadyAnswered) alreadyAnswered.chosenOptionId = data.chosenOptionId;
+  else answerList.push({ questionId: data.questionId, chosenOptionId: data.chosenOptionId });
+  await gameSession.save();
+
+  // if this is a new answer, send next question if needed
+  if ( !alreadyAnswered && answerList.length < gameSession.questionIds.length) {
+    const question = await QuestionDao.findById(
+      gameSession.questionIds[answerList.length],
+      { questionText: 1, options: 1 }
+    );
+    sendQuestionSendEvent(data.userId, data.gameSessionId, {
+      _id: question._id,
+      text: question.questionText,
+      options: question.options
+    });
+  }
 }
