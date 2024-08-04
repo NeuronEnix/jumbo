@@ -11,10 +11,11 @@ const wss = new WebSocketServer({
   port: CONFIG.SERVER.WS_PORT,
 });
 
-console.log(`WebSocket at: ${CONFIG.SERVER.WS_PORT}`);
+console.log(`WebSocket at: ws://127.0.0.1:${CONFIG.SERVER.WS_PORT}`);
 
 wss.on('connection', (ws, req) => {
   try {
+    console.log("WebSocket con received")
     const tokenPayload = verifyAccessToken(req.headers.authorization)
     userWs[tokenPayload.id] = ws
     ws.userId = tokenPayload.id
