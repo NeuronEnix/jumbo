@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker-build": "docker build --no-cache -t  neuronenix/pvt:jumbo .;",
+    "docker-push": "docker push neuronenix/pvt:jumbo"
   },
   "author": "Kaushik R Bangera",
   "license": "MIT",

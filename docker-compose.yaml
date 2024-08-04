@@ -1,6 +1,9 @@
 networks:
   net:
     name: jumbo
+  # net:
+  #   name: dev
+  #   external: true
 
 services:
   jumbo-api:
