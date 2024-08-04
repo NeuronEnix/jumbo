@@ -45,6 +45,11 @@ DB_HOST = mongo
 ```sh
 docker compose up -d
 ```
+- Before calling any API run this command to populate `monogdb`  with questions
+```sh
+docker exec jumbo-api node populate.mjs
+```
+
 
 # Methods
 | Method | API | Request Data |
