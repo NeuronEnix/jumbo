@@ -33,9 +33,10 @@ export async function execute(req, res) {
   const data = req.body;
   try {
     const user = await UserDao.findById(req.user.id, {
-      name: 1, status: 1
+      name: 1, status: 1, gameSessionId: 1
     })
     if (user.status !== STATUS.ACTIVE) throw resErr.auth.userInactive();
+    if (user.gameSessionId) throw resErr.game.alreadyInSession();
     if (!isUserConnected(req.user.id)) throw resErr.game.userNotConnected();
     addToQueue({ userId: req.user.id, name: user.name });
     return resOk(res, { userId: req.user.id });
