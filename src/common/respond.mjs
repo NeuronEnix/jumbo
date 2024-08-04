@@ -113,6 +113,10 @@ export const resErr = {
     notAllQuestionAnswered: () => new ResponseError({
       code: 'NOT_ALL_QUESTION_ANSWERED',
       msg: 'Not all questions answered',
+    }),
+    gameCompleted: () => new ResponseError({
+      code: 'GAME_COMPLETED',
+      msg: 'Game completed',
     })
   }
 };

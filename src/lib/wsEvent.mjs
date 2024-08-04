@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 
-import { CommonSchema, GAME_EVENT } from "../common/const.mjs";
+import { CommonSchema, GAME_EVENT, STATUS } from "../common/const.mjs";
 import { sendEventToUser, userWs } from "../webSocket.mjs";
 import { QuestionDao, QuestionSchema } from '../model/question.mjs';
 import { GameSessionDao } from '../model/gameSession.mjs';
@@ -117,6 +117,7 @@ export async function handleAnswerSubmitEvent(payload) {
 
   // Handle validation
   if (!gameSession) throw resErr.game.notFound();
+  if (gameSession.status === STATUS.COMPLETED ) throw resErr.game.gameCompleted();
   if (!gameSession.users.find((u) => u._id == userId)) throw resErr.game.userNotInGame();
   if (!gameSession.questionIds.includes(data.questionId)) throw resErr.game.invalidQuestion();
 
@@ -166,17 +167,17 @@ export async function handleGameSubmitEvent(payload) {
   const { userId, data } = payload
   const dataValidated = gameSubmitValidator(data);
   if (!dataValidated) {
-    console.log(answerSubmitValidator.errors)
     throw resErr.gen.invalidParam('', answerSubmitValidator.errors)
   }
   const gameSession = await GameSessionDao.findById(data.gameSessionId);
 
   // Handle validation
   if (!gameSession) throw resErr.game.notFound();
+  if (gameSession.status === STATUS.COMPLETED ) throw resErr.game.gameCompleted();
   const gameUser = gameSession.users.find((u) => u._id == userId)
   if (!gameUser) throw resErr.game.userNotInGame();
   if (gameSession.questionIds.length != gameUser.answers.length) throw resErr.game.notAllQuestionAnswered();
-  // if (gameUser.gameSubmitted) throw resErr.game.alreadySubmitted();
+  if (gameUser.gameSubmitted) throw resErr.game.alreadySubmitted();
 
   // Calculate score
   const questionList = await QuestionDao.find({ _id: { $in: gameSession.questionIds } });
@@ -192,5 +193,7 @@ export async function handleGameSubmitEvent(payload) {
   sendUserDoneEvent(userId, gameSession.users.map((u) => u._id), data.gameSessionId)
   const submittedUserCount = gameSession.users.filter((u) => u.gameSubmitted).length
   if (submittedUserCount != gameSession.users.length) return
+  gameSession.status = STATUS.COMPLETED
+  await gameSession.save()
   sendGameEndEvent(gameSession)
 }

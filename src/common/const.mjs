@@ -1,7 +1,8 @@
 export const STATUS = {
   ACTIVE: 1,
   DELETED: 2,
-  NOT_REGISTERED: 3
+  NOT_REGISTERED: 3,
+  COMPLETED: 3
 };
 
 export const CommonSchema = {
