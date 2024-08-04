@@ -46,6 +46,15 @@ export function sendQuestionSendEvent(userId, gameSessionId, question) {
   })
 }
 
+export function sendQuestionCompleteEvent(userId, gameSessionId) {
+  sendEventToUser(userId, {
+    event: GAME_EVENT.QUESTION_COMPLETE.name,
+    userId,
+    data: { gameSessionId }
+  })
+}
+
+
 /**
  * Send user done event
  * @param {String[]} userId
@@ -77,7 +86,7 @@ export async function sendGameEndEvent(gameSession) {
       userId: u._id,
       data: {
         isDraw, winnerId, gameSessionId: gameSession._id,
-        users: gameSession.users.map( u => ({
+        users: gameSession.users.map(u => ({
           userId: u._id,
           name: users.find(user => user._id.equals(u._id)).name,
           score: u.score
@@ -117,12 +126,12 @@ export async function handleAnswerSubmitEvent(payload) {
 
   // Handle validation
   if (!gameSession) throw resErr.game.notFound();
-  if (gameSession.status === STATUS.COMPLETED ) throw resErr.game.gameCompleted();
+  if (gameSession.status === STATUS.COMPLETED) throw resErr.game.gameCompleted();
   if (!gameSession.users.find((u) => u._id == userId)) throw resErr.game.userNotInGame();
   if (!gameSession.questionIds.includes(data.questionId)) throw resErr.game.invalidQuestion();
 
   const question = await QuestionDao.findById(
-    gameSession.questionIds[answerList.length],
+    data.questionId,
     { questionText: 1, options: 1 }
   );
 
@@ -137,12 +146,20 @@ export async function handleAnswerSubmitEvent(payload) {
   await gameSession.save();
 
   // if this is a new answer, send next question if needed
-  if (!alreadyAnswered && answerList.length < gameSession.questionIds.length) {
-    sendQuestionSendEvent(userId, data.gameSessionId, {
-      _id: question._id,
-      text: question.questionText,
-      options: question.options
-    });
+  if (!alreadyAnswered) {
+    if (answerList.length < gameSession.questionIds.length) {
+      const nextQuestion = await QuestionDao.findById(
+        gameSession.questionIds[answerList.length],
+        { questionText: 1, options: 1 }
+      );
+      sendQuestionSendEvent(userId, data.gameSessionId, {
+        _id: nextQuestion._id,
+        text: nextQuestion.questionText,
+        options: nextQuestion.options
+      });
+    } else {
+      sendQuestionCompleteEvent(userId, data.gameSessionId);
+    }
   }
 }
 
@@ -173,7 +190,7 @@ export async function handleGameSubmitEvent(payload) {
 
   // Handle validation
   if (!gameSession) throw resErr.game.notFound();
-  if (gameSession.status === STATUS.COMPLETED ) throw resErr.game.gameCompleted();
+  if (gameSession.status === STATUS.COMPLETED) throw resErr.game.gameCompleted();
   const gameUser = gameSession.users.find((u) => u._id == userId)
   if (!gameUser) throw resErr.game.userNotInGame();
   if (gameSession.questionIds.length != gameUser.answers.length) throw resErr.game.notAllQuestionAnswered();

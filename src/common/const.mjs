@@ -34,6 +34,9 @@ export const GAME_EVENT = {
   QUESTION_SEND: {
     name: "question:send"
   },
+  QUESTION_COMPLETE: {
+    name: "question:complete"
+  },
   ANSWER_SUBMIT: {
     name: "answer:submit"
   },
