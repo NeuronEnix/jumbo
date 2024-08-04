@@ -37,7 +37,7 @@ export async function execute(req, res) {
     })
     if (user.status !== STATUS.ACTIVE) throw resErr.auth.userInactive();
     if (!isUserConnected(req.user.id)) throw resErr.game.userNotConnected();
-    addToQueue({userId: req.user.id, name: user.name});
+    addToQueue({ userId: req.user.id, name: user.name });
     return resOk(res, { userId: req.user.id });
   } catch (e) {
     if (e instanceof ResponseError) {
