@@ -90,5 +90,21 @@ export const resErr = {
       code: 'USER_NOT_CONNECTED',
       msg: 'User not connected to websocket, please connect',
     }),
+    notFound: () => new ResponseError({
+      code: 'GAME_NOT_FOUND',
+      msg: 'Game not found',
+    }),
+    userNotInGame: () => new ResponseError({
+      code: 'USER_NOT_IN_GAME',
+      msg: 'User not in game',
+    }),
+    invalidQuestion: () => new ResponseError({
+      code: 'INVALID_QUESTION',
+      msg: 'Invalid question',
+    }),
+    invalidOption: () => new ResponseError({
+      code: 'INVALID_OPTION',
+      msg: 'Invalid option',
+    }),
   }
 };
