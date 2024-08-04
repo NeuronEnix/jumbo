@@ -47,7 +47,7 @@ export async function handleGameInit() {
       users: gameUsers
     })
     gameUsers.forEach((u) => {
-      sendQuestionSendEvent( u.userId, gameSession.questionList )
+      sendQuestionSendEvent( u.userId, gameSession.gameSessionId, gameSession.questionList[0] )
     });
   }
   setTimeout(handleGameInit, 1000);
@@ -60,11 +60,12 @@ async function getRandomQuestion(questionCount) {
 
 async function createGameSession(userList) {
   const questionList = await getRandomQuestion(GAME_CONFIG.MAX_QUESTION);
-  await GameSessionDao.create({
+  const gameSession = await GameSessionDao.create({
     questionIds: questionList,
     users: userList.map((u) => ({ _id: u.userId })),
   })
   return {
+    gameSessionId: gameSession._id,
     questionList
   }
 }
